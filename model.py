@@ -56,7 +56,8 @@ class Model(object):
 
     def ready(self):
         config = self.config
-        N, PL, QL, CL, d, dc, dg = config.batch_size, self.c_maxlen, self.q_maxlen, config.char_limit, config.hidden, config.char_dim, config.char_hidden
+        char_emb_dim = config.glove_dim if config.pretrained_char else config.char_dim
+        N, PL, QL, CL, d, dc, dg = config.batch_size, self.c_maxlen, self.q_maxlen, config.char_limit, config.hidden, char_emb_dim, config.char_hidden
         gru = cudnn_gru if config.use_cudnn else native_gru
 
         with tf.variable_scope("emb"):

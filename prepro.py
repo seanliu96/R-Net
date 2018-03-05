@@ -3,7 +3,7 @@ import random
 from tqdm import tqdm
 import spacy
 import ujson as json
-from collections import Counter
+from collections import Counter, OrderedDict
 import numpy as np
 
 nlp = spacy.blank("en")
@@ -81,11 +81,12 @@ def process_file(filename, data_type, word_counter, char_counter):
 
 def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_size=None):
     print("Generating {} embedding...".format(data_type))
-    embedding_dict = {}
+    embedding_dict = OrderedDict()
     filtered_elements = [k for k, v in counter.items() if v > limit]
     if emb_file is not None:
         assert size is not None
         assert vec_size is not None
+        print("vector size: ", vec_size)
         with open(emb_file, "r", encoding="utf-8") as fh:
             for line in tqdm(fh, total=size):
                 array = line.split()
@@ -97,6 +98,7 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
             len(embedding_dict), len(filtered_elements), data_type))
     else:
         assert vec_size is not None
+        print("vector size: ", vec_size)
         for token in filtered_elements:
             embedding_dict[token] = [np.random.normal(
                 scale=0.1) for _ in range(vec_size)]
@@ -199,6 +201,12 @@ def save(filename, obj, message=None):
         with open(filename, "w") as fh:
             json.dump(obj, fh)
 
+def load(filename, message=None):
+    if message is not None:
+        print("Loading {}...".format(message))
+        with open(filename, "w") as fh:
+            json.load(obj, fh)
+    return obj
 
 def prepro(config):
     word_counter, char_counter = Counter(), Counter()

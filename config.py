@@ -6,7 +6,7 @@ from main import train, test
 
 flags = tf.flags
 
-home = os.path.expanduser("~")
+home = os.path.expanduser("./")
 train_file = os.path.join(home, "data", "squad", "train-v1.1.json")
 dev_file = os.path.join(home, "data", "squad", "dev-v1.1.json")
 test_file = os.path.join(home, "data", "squad", "dev-v1.1.json")
@@ -76,7 +76,7 @@ flags.DEFINE_integer("char_count_limit", -1, "Min count for char")
 flags.DEFINE_integer("capacity", 15000, "Batch size of dataset shuffle")
 flags.DEFINE_integer("num_threads", 4, "Number of threads in input pipeline")
 flags.DEFINE_boolean("use_cudnn", True, "Whether to use cudnn rnn (should be False for CPU)")
-flags.DEFINE_boolean("is_bucket", False, "build bucket batch iterator or not")
+flags.DEFINE_boolean("is_bucket", True, "build bucket batch iterator or not")
 flags.DEFINE_integer("bucket_range", [40, 401, 40], "the range of bucket")
 
 flags.DEFINE_integer("batch_size", 64, "Batch size")
@@ -95,7 +95,7 @@ flags.DEFINE_integer("patience", 3, "Patience for learning rate decay")
 # Extensions (Uncomment corresponding code in download.sh to download the required data)
 glove_char_file = os.path.join(home, "data", "glove", "glove.840B.300d-char.txt")
 flags.DEFINE_string("glove_char_file", glove_char_file, "Glove character embedding source file")
-flags.DEFINE_boolean("pretrained_char", False, "Whether to use pretrained character embedding")
+flags.DEFINE_boolean("pretrained_char", True, "Whether to use pretrained character embedding")
 
 fasttext_file = os.path.join(home, "data", "fasttext", "wiki-news-300d-1M.vec")
 flags.DEFINE_string("fasttext_file", fasttext_file, "Fasttext word embedding source file")
