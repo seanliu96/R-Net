@@ -34,7 +34,7 @@ def process_file(filename, data_type, word_counter, char_counter):
     total = 0
     with open(filename, "r") as fh:
         source = json.load(fh)
-        for article in tqdm(source["data"]):
+        for article in tqdm(source["data"], ascii=True):
             for para in article["paragraphs"]:
                 context = para["context"].replace(
                     "''", '" ').replace("``", '" ')
@@ -88,7 +88,7 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
         assert vec_size is not None
         print("vector size: ", vec_size)
         with open(emb_file, "r", encoding="utf-8") as fh:
-            for line in tqdm(fh, total=size):
+            for line in tqdm(fh, total=size, ascii=True):
                 array = line.split()
                 word = "".join(array[0:-vec_size])
                 vector = list(map(float, array[-vec_size:]))
@@ -133,7 +133,7 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
     total = 0
     total_ = 0
     meta = {}
-    for example in tqdm(examples):
+    for example in tqdm(examples, ascii=True):
         total_ += 1
 
         if filter_func(example, is_test):

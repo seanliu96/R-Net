@@ -50,7 +50,7 @@ def train(config):
         sess.run(tf.assign(model.is_train, tf.constant(True, dtype=tf.bool)))
         sess.run(tf.assign(model.lr, tf.constant(lr, dtype=tf.float32)))
 
-        for _ in tqdm(range(1, config.num_steps + 1)):
+        for _ in tqdm(range(1, config.num_steps + 1), ascii=True):
             global_step = sess.run(model.global_step) + 1
             loss, train_op = sess.run([model.loss, model.train_op], feed_dict={
                                       handle: train_handle})
@@ -93,7 +93,7 @@ def train(config):
 def evaluate_batch(model, num_batches, eval_file, sess, data_type, handle, str_handle):
     answer_dict = {}
     losses = []
-    for _ in tqdm(range(1, num_batches + 1)):
+    for _ in tqdm(range(1, num_batches + 1), ascii=True):
         qa_id, loss, yp1, yp2, = sess.run(
             [model.qa_id, model.loss, model.yp1, model.yp2], feed_dict={handle: str_handle})
         answer_dict_, _ = convert_tokens(
@@ -141,7 +141,7 @@ def test(config):
         losses = []
         answer_dict = {}
         remapped_dict = {}
-        for step in tqdm(range(total // config.batch_size + 1)):
+        for step in tqdm(range(total // config.batch_size + 1), ascii=True):
             qa_id, loss, yp1, yp2 = sess.run(
                 [model.qa_id, model.loss, model.yp1, model.yp2])
             answer_dict_, remapped_dict_ = convert_tokens(
