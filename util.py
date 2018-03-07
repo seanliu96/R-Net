@@ -37,6 +37,9 @@ def get_record_parser(config, is_test=False):
 
 
 def get_batch_dataset(record_file, parser, config):
+    """
+    Read a file and construct batches
+    """
     num_threads = tf.constant(config.num_threads, dtype=tf.int32)
     dataset = tf.data.TFRecordDataset(record_file).map(
         parser, num_parallel_calls=num_threads).shuffle(config.capacity).repeat()

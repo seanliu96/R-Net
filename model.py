@@ -5,8 +5,17 @@ from func import cudnn_gru, native_gru, dot_attention, summ, dropout, ptr_net
 class Model(object):
     def __init__(self, config, batch, word_mat=None, char_mat=None, trainable=True, opt=True):
         self.config = config
-        self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
-                                           initializer=tf.constant_initializer(0), trainable=False)
+        self.global_step = tf.get_variable('global_step', shape=[
+        ], dtype=tf.int32, initializer=tf.constant_initializer(0), trainable=False)
+        """
+        context_idxs: a list of context tokens indexes, shape=(batch_size, para_limit).
+        ques_idxs: a list of question tokens indexes, shape=(batch_size, ques_limit,).
+        context_char_idxs: a list of context chars indexes, shape=(batch_size, para_limit, char_limit)
+        ques_char_idxs: a list of question chars indexes, shape=(batch_size, ques_limit, char_limit)
+        y1: one hot vector indicating the start positions, shape=(batch_size, para_limit)
+        y2: one hot vector indicating the end position, shape=(batch_size, para_limit)
+        id: the No. of the dataset, shape=(batch_size,)
+        """
         self.c, self.q, self.ch, self.qh, self.y1, self.y2, self.qa_id = batch.get_next()
         self.is_train = tf.get_variable(
             "is_train", shape=[], dtype=tf.bool, trainable=False)
@@ -116,8 +125,8 @@ class Model(object):
             logits1, logits2 = pointer(init, match, d, self.c_mask)
 
         with tf.variable_scope("predict"):
-            outer = tf.matmul(tf.expand_dims(tf.nn.softmax(logits1), axis=2),
-                              tf.expand_dims(tf.nn.softmax(logits2), axis=1))
+            outer = tf.matmul(tf.expand_dims(tf.nn.softmax(
+                logits1), axis=2), tf.expand_dims(tf.nn.softmax(logits2), axis=1))
             outer = tf.matrix_band_part(outer, 0, 15)
             self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)

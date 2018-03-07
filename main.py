@@ -9,6 +9,9 @@ from util import get_record_parser, convert_tokens, evaluate, get_batch_dataset,
 
 
 def train(config):
+    """
+    Train the R-Net model and save it
+    """
     with open(config.word_emb_file, "r") as fh:
         word_mat = np.array(json.load(fh), dtype=np.float32)
     with open(config.char_emb_file, "r") as fh:

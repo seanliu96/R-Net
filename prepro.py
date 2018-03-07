@@ -28,6 +28,12 @@ def convert_idx(text, tokens):
 
 
 def process_file(filename, data_type, word_counter, char_counter):
+    """
+    Process the data file.
+    Examples are used to train, tune and test the R-Net model.
+    Evaluation information is used to store answers and extra information.
+    Return a list of examples and a dictionary of eval information.
+    """
     print("Generating {} examples...".format(data_type))
     examples = []
     eval_examples = {}
@@ -69,9 +75,24 @@ def process_file(filename, data_type, word_counter, char_counter):
                         y1, y2 = answer_span[0], answer_span[-1]
                         y1s.append(y1)
                         y2s.append(y2)
+                    """
+                    context_tokens: tokens of the context, shape=(?)
+                    context_chars: chars of the context, shape=(?,?)
+                    ques_tokens: tokens of the question, shape=(?)
+                    ques_chars: chars of the question, shape=(?, ?)
+                    y1s: start token positions of answers, shape=(?)
+                    y2s: end token positions of answers, shape=(?)
+                    id: the No. of the dataset (file)
+                    """
                     example = {"context_tokens": context_tokens, "context_chars": context_chars, "ques_tokens": ques_tokens,
                                "ques_chars": ques_chars, "y1s": y1s, "y2s": y2s, "id": total}
                     examples.append(example)
+                    """
+                    context: the source context
+                    spans: a list of tuples, which stores the start position and the end position of a token, shape=(?, 2)
+                    answers: a list of answers, shape=(?)
+                    uuid: the source id
+                    """
                     eval_examples[str(total)] = {
                         "context": context, "spans": spans, "answers": answer_texts, "uuid": qa["id"]}
         random.shuffle(examples)
@@ -80,10 +101,17 @@ def process_file(filename, data_type, word_counter, char_counter):
 
 
 def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_size=None):
+    """
+    Get embedding information from a file.
+    Return a embedding matrix and a dictionary from words to indexes
+    """
     print("Generating {} embedding...".format(data_type))
     embedding_dict = OrderedDict()
     filtered_elements = [k for k, v in counter.items() if v > limit]
     if emb_file is not None:
+        """
+        read vectors from the emb_file and store them in a embedding_dict (keys are words and values are vectors)
+        """
         assert size is not None
         assert vec_size is not None
         print("vector size: ", vec_size)
@@ -97,6 +125,9 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
         print("{} / {} tokens have corresponding {} embedding vector".format(
             len(embedding_dict), len(filtered_elements), data_type))
     else:
+        """
+        randomly generate vectors and store them in a embedding_dict (keys are words and values are vectors)
+        """
         assert vec_size is not None
         print("vector size: ", vec_size)
         for token in filtered_elements:
@@ -107,20 +138,31 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
 
     NULL = "--NULL--"
     OOV = "--OOV--"
+    """
+    record indexes of words in a token2idx_dict (keys are words and values are indexes)
+    """
     token2idx_dict = {token: idx for idx,
                       token in enumerate(embedding_dict.keys(), 2)}
     token2idx_dict[NULL] = 0
     token2idx_dict[OOV] = 1
     embedding_dict[NULL] = [0. for _ in range(vec_size)]
     embedding_dict[OOV] = [0. for _ in range(vec_size)]
+    """
+    construct the idx2emb_dict (keys are indexes and values are vectors)
+    """
     idx2emb_dict = {idx: embedding_dict[token]
                     for token, idx in token2idx_dict.items()}
+    """
+    store vectors in a matrix
+    """
     emb_mat = [idx2emb_dict[idx] for idx in range(len(idx2emb_dict))]
     return emb_mat, token2idx_dict
 
 
 def build_features(config, examples, data_type, out_file, word2idx_dict, char2idx_dict, is_test=False):
-
+    """
+    Extract necessary 
+    """
     para_limit = config.test_para_limit if is_test else config.para_limit
     ques_limit = config.test_ques_limit if is_test else config.ques_limit
     char_limit = config.char_limit
@@ -178,7 +220,15 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
 
         start, end = example["y1s"][-1], example["y2s"][-1]
         y1[start], y2[end] = 1.0, 1.0
-
+        """
+        context_idxs: a byteslist of context tokens indexes.
+        ques_idxs: a byteslist of question tokens indexes.
+        context_char_idxs: a bytelist of context chars indexes
+        ques_char_idxs: a bytelist of question chars indexes
+        y1: one hot vector indicating the start positions
+        y2: one hot vector indicating the end position
+        id: the No. of the dataset (file)
+        """
         record = tf.train.Example(features=tf.train.Features(feature={
                                   "context_idxs": tf.train.Feature(bytes_list=tf.train.BytesList(value=[context_idxs.tostring()])),
                                   "ques_idxs": tf.train.Feature(bytes_list=tf.train.BytesList(value=[ques_idxs.tostring()])),
@@ -201,6 +251,7 @@ def save(filename, obj, message=None):
         with open(filename, "w") as fh:
             json.dump(obj, fh)
 
+
 def load(filename, message=None):
     if message is not None:
         print("Loading {}...".format(message))
@@ -208,7 +259,11 @@ def load(filename, message=None):
             json.load(obj, fh)
     return obj
 
+
 def prepro(config):
+    """
+    Preprocess the dataset and save necessary files.
+    """
     word_counter, char_counter = Counter(), Counter()
     train_examples, train_eval = process_file(
         config.train_file, "train", word_counter, char_counter)
