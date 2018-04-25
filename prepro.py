@@ -5,6 +5,7 @@ import spacy
 import ujson as json
 from collections import Counter, OrderedDict
 import numpy as np
+import os.path
 
 nlp = spacy.blank("en")
 
@@ -132,7 +133,7 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
         print("vector size: ", vec_size)
         for token in filtered_elements:
             embedding_dict[token] = [np.random.normal(
-                scale=0.1) for _ in range(vec_size)]
+                scale=0.01) for _ in range(vec_size)]
         print("{} tokens have corresponding embedding vector".format(
             len(filtered_elements)))
 
@@ -277,10 +278,19 @@ def prepro(config):
     char_emb_size = config.glove_char_size if config.pretrained_char else None
     char_emb_dim = config.glove_dim if config.pretrained_char else config.char_dim
 
-    word_emb_mat, word2idx_dict = get_embedding(
-        word_counter, "word", emb_file=word_emb_file, size=config.glove_word_size, vec_size=config.glove_dim)
+    word2idx_dict = None
+    if os.path.isfile(config.word2idx_file):
+        with open(config.word2idx_file, "r") as fh:
+            word2idx_dict = json.load(fh)
+    word_emb_mat, word2idx_dict = get_embedding(word_counter, "word", emb_file=word_emb_file,
+                                                size=config.glove_word_size, vec_size=config.glove_dim, token2idx_dict=word2idx_dict)
+
+    char2idx_dict = None
+    if os.path.isfile(config.char2idx_file):
+        with open(config.char2idx_file, "r") as fh:
+            char2idx_dict = json.load(fh)
     char_emb_mat, char2idx_dict = get_embedding(
-        char_counter, "char", emb_file=char_emb_file, size=char_emb_size, vec_size=char_emb_dim)
+        char_counter, "char", emb_file=char_emb_file, size=char_emb_size, vec_size=char_emb_dim, token2idx_dict=char2idx_dict)
 
     build_features(config, train_examples, "train",
                    config.train_record_file, word2idx_dict, char2idx_dict)
@@ -295,4 +305,6 @@ def prepro(config):
     save(config.dev_eval_file, dev_eval, message="dev eval")
     save(config.test_eval_file, test_eval, message="test eval")
     save(config.dev_meta, dev_meta, message="dev meta")
+    save(config.word2idx_file, word2idx_dict, message="word2idx")
+    save(config.char2idx_file, char2idx_dict, message="char2idx")
     save(config.test_meta, test_meta, message="test meta")
